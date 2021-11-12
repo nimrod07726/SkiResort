@@ -18,6 +18,7 @@ namespace SkiResort
 
         private int[] maximumPath;
         private List<List<int>> largestPaths;
+        private List<Tuple<int, int>> largestPathsLocations;
 
         public int[,] State { get; }
         public int[,] Elevations { get; set; }
@@ -47,32 +48,6 @@ namespace SkiResort
             }
         }
 
-        public void PrintMaximumPath()
-        {
-            if(MaximumPathLength > 0)
-            {
-                foreach (int elevation in MaximumPath)
-                {
-                    Console.Write("{0} ", elevation);
-                    Console.WriteLine();
-                }
-            }
-            else
-                Console.WriteLine("empty");
-        }
-
-        public void PrintState()
-        {
-            for(int i = 0; i < State.GetLength(0); i++)
-            {
-                for(int j = 0; j < State.GetLength(1); j++)
-                {
-                    Console.Write("{0} ", State[i, j]);
-                }
-                Console.WriteLine("");
-            }
-        }
-
         public Field()
         {
             maximumPath = new int[] { };
@@ -85,6 +60,7 @@ namespace SkiResort
                 Elevations.GetLength(0),
                 Elevations.GetLength(1)];
             largestPaths = new List<List<int>>();
+            largestPathsLocations = new List<Tuple<int, int>>();
             ComputeMaximumPaths();
         }
 
@@ -95,8 +71,6 @@ namespace SkiResort
             int x = Elevations.GetLength(0);
             int y = Elevations.GetLength(1);
 
-            //int[,] state = new int[x, y];
-
             int maximumLength = 0;
 
             // visit each box - retrieve state matrix
@@ -106,19 +80,25 @@ namespace SkiResort
                 for(int j = 0; j < y; j++)
                 {
                     int currentLength = ComputeLongestPaths(State, x, y, i, j);
-                    maximumLength = Math.Max(maximumLength, currentLength);
+                    if (currentLength > maximumLength)
+                    {
+                        largestPathsLocations.Clear();
+                        largestPathsLocations.Add(new Tuple<int, int>(i, j));
+                        maximumLength = currentLength;
+                    }
+                    else if (currentLength == maximumLength) largestPathsLocations.Add(new Tuple<int, int>(i, j));
                 }
             }
 
             // find steepest path
 
-            maximumPath = GetSteepestPath(maximumLength);
+            maximumPath = GetSteepestPath();
         }
 
-        private int[] GetSteepestPath(int maximumLength)
+        private int[] GetSteepestPath()
         {
             // list largest paths
-            ListLargestPaths(maximumLength);
+            ListLargestPaths();
             
             // find steepest path from paths list
             int maximumSlope = 0;
@@ -140,19 +120,39 @@ namespace SkiResort
             return largestPaths[maximumIndex].ToArray();
         }
 
-        private void ListLargestPaths(int maximumLength)
+        private void ListLargestPaths()
         {
-            //TODO: list path locations
-            for(int i = 0; i < State.GetLength(0); i++)
+            foreach (Tuple<int, int> coord in largestPathsLocations)
             {
-                for (int j = 0; j < State.GetLength(1); j++)
-                {
+                List<int> path = new List<int>();
 
+                int x = coord.Item1, y = coord.Item2;
+                int maxState = State[x, y];
+
+                for (int currentState = maxState; currentState >= 1; currentState--)
+                {
+                    foreach (int[] direction in directions)
+                    {
+                        if(!path.Contains(Elevations[x, y]))
+                            path.Add(Elevations[x, y]);
+
+                        int u = x + direction[0];
+                        int v = y + direction[1];
+
+                        if (u < 0 || v < 0 || u > State.GetLength(0) - 1 || v > State.GetLength(1) - 1) 
+                            continue;
+                        else if (currentState - State[u, v] == 1)
+                        {
+                            x = u;
+                            y = v;
+                            break;
+                        }
+
+                    }
                 }
+                largestPaths.Add(path);
             }
             
-            //TODO: track and save paths
-
         }
 
         private int ComputeLongestPaths(int[,] state, int x, int y, int i, int j)
@@ -169,12 +169,40 @@ namespace SkiResort
                     if(u > -1 && v > -1 && u < x && v < y && Elevations[u, v] < Elevations[i, j])
                     {
                         int currentMaximum = ComputeLongestPaths(state, x, y, u, v);
-                        maximum = Math.Max(maximum, currentMaximum);
+                        if (currentMaximum > maximum) 
+                            maximum = currentMaximum;
                     }
 
                 }
                 state[i, j] = maximum + 1;
                 return state[i, j];
+            }
+        }
+
+        public void PrintMaximumPath()
+        {
+            if (MaximumPathLength > 0)
+            {
+                foreach (int elevation in MaximumPath)
+                    Console.Write("{0}-", elevation);
+
+                Console.Write("\b ");
+                Console.WriteLine();
+            }
+            else
+                Console.WriteLine("empty");
+        }
+
+        public void PrintState()
+        {
+            Console.WriteLine("State matrix:");
+            for (int i = 0; i < State.GetLength(0); i++)
+            {
+                for (int j = 0; j < State.GetLength(1); j++)
+                {
+                    Console.Write("{0} ", State[i, j]);
+                }
+                Console.WriteLine("");
             }
         }
 

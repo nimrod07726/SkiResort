@@ -18,13 +18,13 @@ namespace SkiResort
                 Field field = new Field(elevations);
 
                 // retrieving state matrix
-                field.PrintState();
+                //field.PrintState();
                 // retrieving MaximumPathLength
                 Console.WriteLine("MaximumPathLength is {0}", field.MaximumPathLength);
                 // retrieving MaximumDrop
                 Console.WriteLine("MaximumDrop is {0}", field.MaximumDrop);
                 // retrieving MaximumPath
-                Console.Write("MaximumPath is ");
+                Console.Write("MaximumPath is: ");
                 field.PrintMaximumPath();
             }
             else
