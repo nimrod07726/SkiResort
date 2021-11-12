@@ -17,6 +17,8 @@ namespace SkiResort
                 // creating Field object
                 Field field = new Field(elevations);
 
+                // retrieving state matrix
+                field.PrintState();
                 // retrieving MaximumPathLength
                 Console.WriteLine("MaximumPathLength is {0}", field.MaximumPathLength);
                 // retrieving MaximumDrop
